@@ -49,9 +49,9 @@ main(void)
     cudaError_t err = cudaSuccess;
 
     // Print the vector length to be used, and compute its size
-    int numElements = 50000;
+    int numElements = 10;
     size_t size = numElements * sizeof(float);
-    printf("[Vector addition of %d elements]\n", numElements);
+   // printf("[Vector addition of %d elements]\n", numElements);
 
     // Allocate the host input vector A
     float *h_A = (float *)malloc(size);
@@ -69,11 +69,13 @@ main(void)
         exit(EXIT_FAILURE);
     }
 
+    float temp_A[10] = {1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,1.0};
+    float temp_B[10] = {2.0,3.0,2.0,3.0,2.0,3.0,2.0,3.0,2.0,3.0};
+
     // Initialize the host input vectors
-    for (int i = 0; i < numElements; ++i)
-    {
-        h_A[i] = rand()/(float)RAND_MAX;
-        h_B[i] = rand()/(float)RAND_MAX;
+    for(int i=0; i<numElements; ++i){
+      h_A[i] = temp_A[i];
+      h_B[i] = temp_B[i];
     }
 
     // Allocate the device input vector A
@@ -108,7 +110,7 @@ main(void)
 
     // Copy the host input vectors A and B in host memory to the device input vectors in
     // device memory
-    printf("Copy input data from the host memory to the CUDA device\n");
+    //printf("Copy input data from the host memory to the CUDA device\n");
     err = cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
 
     if (err != cudaSuccess)
@@ -126,9 +128,10 @@ main(void)
     }
 
     // Launch the Vector Add CUDA Kernel
-    int threadsPerBlock = 256;
-    int blocksPerGrid =(numElements + threadsPerBlock - 1) / threadsPerBlock;
-    printf("CUDA kernel launch with %d blocks of %d threads\n", blocksPerGrid, threadsPerBlock);
+    int threadsPerBlock = 16;
+    //int blocksPerGrid =(numElements + threadsPerBlock - 1) / threadsPerBlock;
+    int blocksPerGrid = 1;
+    //printf("CUDA kernel launch with %d blocks of %d threads\n", blocksPerGrid, threadsPerBlock);
     vectorAdd<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, numElements);
     err = cudaGetLastError();
 
@@ -140,7 +143,7 @@ main(void)
 
     // Copy the device result vector in device memory to the host result vector
     // in host memory.
-    printf("Copy output data from the CUDA device to the host memory\n");
+    //printf("Copy output data from the CUDA device to the host memory\n");
     err = cudaMemcpy(h_C, d_C, size, cudaMemcpyDeviceToHost);
 
     if (err != cudaSuccess)
@@ -149,17 +152,25 @@ main(void)
         exit(EXIT_FAILURE);
     }
 
-    // Verify that the result vector is correct
-    for (int i = 0; i < numElements; ++i)
-    {
-        if (fabs(h_A[i] + h_B[i] - h_C[i]) > 1e-5)
-        {
-            fprintf(stderr, "Result verification failed at element %d!\n", i);
-            exit(EXIT_FAILURE);
-        }
-    }
 
-    printf("Test PASSED\n");
+ //    printf("Test PASSED\n");*/
+    printf("source vector A: ");
+    for(int i=0; i<numElements; i++){
+      printf("%0.3f ", h_A[i]);
+    }
+    printf("\n");
+
+    printf("source vector B: ");
+    for(int i=0; i<numElements; i++){
+      printf("%0.3f ", h_B[i]);
+    }
+    printf("\n");
+
+    printf("result vector C: ");
+    for(int i=0; i<numElements; i++){
+      printf("%0.3f ", h_C[i]);
+    }
+    printf("\n");
 
     // Free device global memory
     err = cudaFree(d_A);
@@ -205,7 +216,5 @@ main(void)
         exit(EXIT_FAILURE);
     }
 
-    printf("Done\n");
     return 0;
 }
-
